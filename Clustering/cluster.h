@@ -44,10 +44,10 @@ struct cluster{
 
 		while(stream){
 			while(buffer.size() != 0){
-				std::string::size_type sz;
-				float temp = std::stof (buffer,&sz);
-				buffer = buffer.substr(sz);
-				matrixOfDistance[i].push_back(temp);
+				std::string::size_type sizeOfTheNumber;
+				float number = std::stof (buffer,&sizeOfTheNumber);
+				buffer = buffer.substr(sizeOfTheNumber);
+				matrixOfDistance[i].push_back(number);
 			}
 			getline(stream, buffer , '\n');
 			++i;
@@ -67,23 +67,22 @@ struct cluster{
 		std::string buffer;
 		getline(stream, buffer , '\n');
 		getline(stream, buffer , '\n');
-		std::vector< std::vector<float> > vectorPointGen;
+		std::vector< std::vector<float> > vectorOfPointsOfTheGens;
 		for (int i = 0; stream; ++i){
-//		while(stream){
-			std::string tempT = "";
-			tempT += '\t';
-			tempT += buffer.substr(0,buffer.find('\t'));
-			gens.push_back(tempT);
-			gensCluster.insert( std::pair<int,std::string> (i, tempT) );
+			std::string stringBuffer = "";
+			stringBuffer += '\t';
+			stringBuffer += buffer.substr(0,buffer.find('\t'));
+			gens.push_back(stringBuffer);
+			gensCluster.insert( std::pair<int,std::string> (i, stringBuffer) );
 			buffer = buffer.substr(buffer.find('\t'));
-			std::vector<float> pointGen;
+			std::vector<float> pointsOfTheGens;
 			while(buffer.size() > 1){
-				std::string::size_type sz;
-				float temp = std::stof (buffer,&sz);
-				buffer = buffer.substr(sz);
-				pointGen.push_back(temp);
+				std::string::size_type sizeOfTheNumber;
+				float number = std::stof (buffer,&sizeOfTheNumber);
+				buffer = buffer.substr(sizeOfTheNumber);
+				pointsOfTheGens.push_back(number);
 			}
-			vectorPointGen.push_back(pointGen);
+			vectorOfPointsOfTheGens.push_back(pointsOfTheGens);
 			getline(stream, buffer , '\n');
 		}
 		stream.close();
@@ -98,8 +97,8 @@ struct cluster{
 					matrixOfDistance[i][j] = 0.0;
 				} else {
 					float distance = 0.0;
-					for (int k = 0; k < vectorPointGen[i].size(); ++k){
-						float tmp = vectorPointGen[j][k] - vectorPointGen[i][k];
+					for (int k = 0; k < vectorOfPointsOfTheGens[i].size(); ++k){
+						float tmp = vectorOfPointsOfTheGens[j][k] - vectorOfPointsOfTheGens[i][k];
 						distance += (tmp * tmp);
 					}
 					distance = sqrt(distance);
@@ -150,20 +149,20 @@ struct cluster{
 		outputFile.open( file.c_str() );
 		outputFile << "Metodo: Clustering Jerarquico Aglomerativo " << link << '\n' << buffer << '\n' << '\n';
 
-		outputFile << "The clusters are: " << '\n' << '\n';
+		outputFile << "Los clusters son: " << '\n' << '\n';
 		for ( std::map<int, std::string>::iterator it = gensCluster.begin(); it != gensCluster.end(); ++it ){
 			outputFile << "Cluster N° " << it -> first << '\n' << it->second << '\n';
 		}
 		outputFile.close();
 	}
 
-	void setGen(std::string gen){
+	void setGen(std::string gen = "A"){
 		gens.push_back(gen);
 	}
 
-	void doCluster(){
+	void doCluster(string file = "", int steps = 1){
 		auto begin = std::chrono::high_resolution_clock::now();
-		makeCluster();
+		makeCluster(steps);
 		auto end = std::chrono::high_resolution_clock::now();
 		showCluster();
 		std::ofstream outputFile;
@@ -196,12 +195,12 @@ struct cluster{
 					}
 				}
 			}
-// En el caso de almacenar la distancia en la cual se une el cluster, aumentar un parametro a la estructura de almacenamiento
+			// En el caso de almacenar la distancia en la cual se une el cluster, aumentar un parametro a la estructura de almacenamiento
 			std::string gen = "";
 			gen += clusterOfGens[maxPair.first.first];
 			gen += '\n';
 			gen += clusterOfGens[maxPair.first.second];
-			//gen += '\n';
+
 			int position = gensCluster.size();
 			/*
 				Erasing the gens that are join
@@ -213,7 +212,7 @@ struct cluster{
 			*/
 			for (std::map<int, std::string>::iterator it = clusterOfGens.begin(); it != clusterOfGens.end(); ++it){
 				/*
-					Making the selection to the new distance
+					Making the two pairs of distance to be compute
 				*/
 				std::pair<int,int> matchOne;
 				std::pair<int,int> matchTwo;
@@ -232,10 +231,6 @@ struct cluster{
 					matchTwo.second = it -> first;
 				}
 				// Type of linkaged
-				/*
-				float distance = 0;
-				distance = (mapDistance[matchOne] > mapDistance[matchTwo])?mapDistance[matchTwo]:mapDistance[matchOne];
-				*/
 				mapDistance.insert( std::pair< std::pair<int,int>, float > ( std::pair<int,int> (it -> first, position) , singleLink(matchOne, matchTwo) ) );
 			}
 			/*
@@ -243,29 +238,28 @@ struct cluster{
 			*/
 			clusterOfGens.insert (std::pair<int,std::string> (position, gen) );
 			/*
-				This Line is to store all the clusters made in the algorithm
+				This Line is to store all the clusters that are made in the algorithm
 			*/
 			gensCluster.insert( std::pair<int,std::string> (position, gen) );
-
 		}
 	}
 
 			
-	float singleLink(std::pair<int,int> matchOne, std::pair<int,int> matchTwo){
+	inline float singleLink(std::pair<int,int> matchOne, std::pair<int,int> matchTwo){
 		float distance = 0;
 		// Single Link
 		distance = (mapDistance[matchOne] > mapDistance[matchTwo])?mapDistance[matchTwo]:mapDistance[matchOne];
 		return distance;
 	}
 
-	float completeLink(std::pair<int,int> matchOne, std::pair<int,int> matchTwo){
+	inline float completeLink(std::pair<int,int> matchOne, std::pair<int,int> matchTwo){
 		float distance = 0;
 		// complete Link
 		distance = (mapDistance[matchOne] > mapDistance[matchTwo])?mapDistance[matchOne]:mapDistance[matchTwo];
 		return distance;
 	}
 
-	float avarageLink(std::pair<int,int> matchOne, std::pair<int,int> matchTwo){
+	inline float avarageLink(std::pair<int,int> matchOne, std::pair<int,int> matchTwo){
 		float distance = 0;
 		// complete - avarage Link
 		distance = (mapDistance[matchTwo] + mapDistance[matchOne])/2.0;
