@@ -1,8 +1,8 @@
 
 #include <iostream>
 #include <vector>
-#include <utility> //std::pair
 #include <algorithm>    // std::swap
+#include <utility> //std::pair
 #include <math.h>
 #include <fstream>
 #include <string>
@@ -37,10 +37,10 @@ struct cluster{
 		int i = 0;
 		while(stream){
 			while(buffer.size() != 0){
-				std::string::size_type sz;
-				float temp = std::stof (buffer,&sz);
-				buffer = buffer.substr(sz);
-				matrixOfDistance[i].push_back(temp);
+				std::string::size_type sizeOfTheNumber;
+				float number = std::stof (buffer,&sizeOfTheNumber);
+				buffer = buffer.substr(sizeOfTheNumber);
+				matrixOfDistance[i].push_back(number);
 			}
 			getline(stream, buffer , '\n');
 			++i;
@@ -54,20 +54,18 @@ struct cluster{
 		getline(stream, buffer , '\n');
 		getline(stream, buffer , '\n');
 
-		std::vector< std::vector<float> > vectorPointGen;
-//		std::cout<<buffer<<'\n';
+		std::vector< std::vector<float> > vectorOfPointsOfTheGen;
 		while(stream){
-		gens.push_back(buffer.substr(0,buffer.find('\t')));
-		buffer = buffer.substr(buffer.find('\t'));
-			std::vector<float> pointGen;
+			gens.push_back(buffer.substr(0,buffer.find('\t')));
+			buffer = buffer.substr(buffer.find('\t'));
+			std::vector<float> pointOfTheGen;
 			while(buffer.size() > 1){
-				std::string::size_type sz;
-//				std::cout << buffer << '\n' << " ---> " << buffer.size() << '\n';
-				float temp = std::stof (buffer,&sz);
-				buffer = buffer.substr(sz);
-				pointGen.push_back(temp);
+				std::string::size_type sizeOfTheNumber;
+				float number = std::stof (buffer,&sizeOfTheNumber);
+				buffer = buffer.substr(sizeOfTheNumber);
+				pointOfTheGen.push_back(number);
 			}
-			vectorPointGen.push_back(pointGen);
+			vectorOfPointsOfTheGen.push_back(pointOfTheGen);
 			getline(stream, buffer , '\n');
 		}
 		stream.close();
@@ -81,8 +79,8 @@ struct cluster{
 					matrixOfDistance[i][j] = 0.0;
 				} else {
 					float distance = 0.0;
-					for (int k = 0; k < vectorPointGen[i].size(); ++k){
-						float tmp = vectorPointGen[j][k] - vectorPointGen[i][k];
+					for (int k = 0; k < vectorOfPointsOfTheGen[i].size(); ++k){
+						float tmp = vectorOfPointsOfTheGen[j][k] - vectorOfPointsOfTheGen[i][k];
 						distance += (tmp * tmp);
 					}
 					distance = sqrt(distance);
@@ -118,7 +116,7 @@ struct cluster{
 
 		std::ofstream outputFile;
 		outputFile.open( file.c_str() );
-		outputFile << "Metodo: Clustering Jerarquico Disociativo" << '\n' << buffer << '\n' << '\n';
+		outputFile << "Method: Clustering Jerarquico Disociativo" << '\n' << buffer << '\n' << '\n';
 		outputFile << "The clusters are: " << '\n' << '\n';
 		for (int i = 0; i < genCluster.size(); ++i){
 			outputFile << "Cluster N° " << i+1 << '\n' << genCluster[i] << '\n';
@@ -126,7 +124,7 @@ struct cluster{
 		outputFile.close();
 	}
 
-	void setGens(std::string gen){
+	void setGens(std::string gen = "A"){
 		gens.push_back(gen);
 	}
 
@@ -135,7 +133,7 @@ struct cluster{
 		auto begin = std::chrono::high_resolution_clock::now();
 		makeCluster();
 		auto end = std::chrono::high_resolution_clock::now();
-		showCluster();
+		//showCluster();
 		std::ofstream outputFile;
 		if (file.size() == 0){
 			file += resultPath;
@@ -149,14 +147,9 @@ struct cluster{
 		saveCluster(file);
 	}
 
-
 	void makeCluster(){
-		//std::cout<<"init"<<'\n';
 		std::vector< std::pair<int,float> > arrayDistanceGen;
 		std::pair<int,float> maxPair; 
-	/*
-		bool flag = 1;
-	*/
 		for (int i = 0; i < matrixOfDistance.size(); ++i){
 			float count = (i)?matrixOfDistance[i][0]:matrixOfDistance[i][1];
 			for (int j = 0; j < matrixOfDistance[i].size(); ++j){
@@ -164,23 +157,9 @@ struct cluster{
 					continue;
 				count = (count > matrixOfDistance[i][j])?matrixOfDistance[i][j]:count;
 			}
-		/*
-			if (i !=0)
-				flag = ((maxPair.second < count))?1:0;
-			if (flag){
-				maxPair.first = i;
-				maxPair.second = count; 
-			}
-		*/
 			arrayDistanceGen.push_back(std::pair<int,float>(i,count));
 		}
 
-/*
-		for (int i = 0; i < arrayDistanceGen.size(); ++i){
-			std::cout << gens[arrayDistanceGen[i].first] << " -> " << arrayDistanceGen[i].second<< '\n';
-		}
-		std::cout<<'\n'<<'\n';
-*/
 		/*
 			sort the array
 		*/
@@ -190,27 +169,21 @@ struct cluster{
 					std::swap(arrayDistanceGen[i],arrayDistanceGen[j]);
 			}
 		}
-/*
-		for (int i = 0; i < arrayDistanceGen.size(); ++i){
-			std::cout << gens[arrayDistanceGen[i].first] << " -> " << arrayDistanceGen[i].second<< '\n';
-		}
-		std::cout<<'\n'<<'\n';
-*/
+
 		bool flag = 1;
-		for (int i = 0; (arrayDistanceGen.size() != 0) && flag; ++i){
-		//while( (arrayDistanceGen.size() != 0) && flag ){
+		for (int i = 1; (arrayDistanceGen.size() != 0) && flag; ++i){
 			maxPair.first = arrayDistanceGen[0].first;
 			maxPair.second = arrayDistanceGen[0].second;
 			std::string clusterGen = "";
 			clusterGen += '\t';
 			clusterGen += gens[maxPair.first];
 			clusterGen += '\n';
-			arrayDistanceGen.erase (arrayDistanceGen.begin());
+			arrayDistanceGen.erase(arrayDistanceGen.begin());
 			std::vector<int> vectorToDeleteGens;
 			for (int i = 0; i < arrayDistanceGen.size(); ++i){
 				float additionFlag = arrayDistanceGen[i].second - matrixOfDistance[maxPair.first][arrayDistanceGen[i].first];
 				/*
-					Comparacion para verificar si el elemento está dentro o fuera del cluster seleccionado
+					Comparison to verify if the element is inside or outside of the selected cluster
 				*/
 				if (additionFlag >= 0){
 					vectorToDeleteGens.push_back(i);
@@ -218,12 +191,12 @@ struct cluster{
 			}
 			for (int i = vectorToDeleteGens.size() - 1; (vectorToDeleteGens.size() != 0) && (i >= 0); --i){
 				clusterGen += '\t';
-				clusterGen += gens[arrayDistanceGen[vectorToDeleteGens[i]].first];
+				clusterGen += gens[arrayDistanceGen[i].first];
 				clusterGen += '\n';
-				arrayDistanceGen.erase (arrayDistanceGen.begin() + vectorToDeleteGens[i]);
+				arrayDistanceGen.erase(arrayDistanceGen.begin() + vectorToDeleteGens[i]);
 			}
 			genCluster.push_back(clusterGen);
-			flag = (numberSteps == -1)?1:(i<numberSteps);
+			flag = (numberSteps == -1)?1:(i + 1 < numberSteps);
 		}
 		if (arrayDistanceGen.size() != 0){
 			std::string clusterGen = "";
@@ -232,7 +205,7 @@ struct cluster{
 				clusterGen += gens[arrayDistanceGen[i].first];
 				clusterGen += '\n';
 			}
-			
+			genCluster.push_back(clusterGen);
 		}
 	}
 
